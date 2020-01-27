@@ -1,42 +1,55 @@
 import json
+import os
+import logging
+import boto3
 
 # import requests
 
 
 def lambda_handler(event, context):
-    """Sample pure Lambda function
+    logger = logging.getLogger()
 
-    Parameters
-    ----------
-    event: dict, required
-        API Gateway Lambda Proxy Input Format
+    try:
+        s3Bucket = os.environ['S3BucketInput']
+    except:
+        logger.error('No S3 Bucket provided in the environment')
+        exit()
 
-        Event doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
+    bodyValue = get_image_keys(s3Bucket)
 
-    context: object, required
-        Lambda Context runtime methods and attributes
+    if bodyValue:
+        for content in bodyValue:
+            print(content['Key'])
+            labels = rekognize_image(content['Key'], s3Bucket)
+            print(labels)
+    else:
+        exit()
 
-        Context doc: https://docs.aws.amazon.com/lambda/latest/dg/python-context-object.html
 
-    Returns
-    ------
-    API Gateway Lambda Proxy Output Format: dict
+def get_image_keys(s3BucketName):
+    s3client = boto3.client('s3')
 
-        Return doc: https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html
-    """
+    response = s3client.list_objects_v2(
+        Bucket=s3BucketName,
+    )
 
-    # try:
-    #     ip = requests.get("http://checkip.amazonaws.com/")
-    # except requests.RequestException as e:
-    #     # Send some context about this error to Lambda Logs
-    #     print(e)
+    if 'Contents' in response:
+        return response['Contents']
+    else:
+        return None
 
-    #     raise e
 
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "message": "hello world",
-            # "location": ip.text.replace("\n", "")
-        }),
-    }
+def rekognize_image(objectKey, s3BucketName):
+    rekogClient = boto3.client('rekognition', region_name='eu-central-1')
+
+    response = rekogClient.detect_labels(
+        Image={
+            'S3Object': {
+                'Bucket': s3BucketName,
+                'Name': objectKey,
+            },
+        },
+        MaxLabels=3
+    )
+
+    return response

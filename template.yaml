@@ -12,16 +12,104 @@ Globals:
     Timeout: 10
 
 Resources:
+  S3RekognitionBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+  S3OutputBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      AccessControl: BucketOwnerFullControl
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+  
+  RekognitionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM Role for Rekognition Backend Lambda Function
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      RoleName: 
+        Fn::Join:
+          -
+            "-"
+          - 
+            - "RekognitionFunction"
+            - !Ref AWS::Region
+            - "Role"
+  RekognitionRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: IAM Policy for Rekognition Backend Lambda Function
+      ManagedPolicyName: RekognitionFunction-Policy
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "s3:Get*"
+              - "s3:List*"
+            Resource:
+              - !Sub "arn:aws:s3:::${S3RekognitionBucket}"
+              - !Sub "arn:aws:s3:::${S3RekognitionBucket}/*"
+          -
+            Effect: "Allow"
+            Action: 
+              - "rekognition:DetectLabels"
+            Resource: "*"
+      Roles:
+        - !Ref RekognitionRole
+
   RekognitionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: rekognition_backend/
       Handler: app.lambda_handler
+      Role: !GetAtt RekognitionRole.Arn
+      Timeout: 60
+      Environment:
+        Variables:
+          S3BucketInput: !Ref S3RekognitionBucket
+          S3BucketOutput: !Ref S3OutputBucket
+      Events:
+        CheckForImages:
+          Type: Schedule
+          Properties:
+            Schedule: rate(5 minutes)
 
 Outputs:
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
+  RekognitionFunction:
+    Description: Rekognition Backend Function ARN
+    Value: !GetAtt RekognitionFunction.Arn
+  # HelloWorldFunctionIamRole:
+  #   Description: "Implicit IAM Role created for Hello World function"
+  #   Value: !GetAtt HelloWorldFunctionRole.Arn
+ 
