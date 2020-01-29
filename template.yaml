@@ -4,6 +4,16 @@ Description: >
   trc-sam-rekognition
 
   Sample SAM Template for trc-sam-rekognition
+Parameters:
+  CustomCloudFrontDomain:
+    Description: Custom Domain to use for the CloudFront Distribution 
+    Type: String
+  Route53HostedZoneName:
+    Description: Custom Hosted Zone Name which should contain the Custom Domain Name for the Distribution
+    Type: String
+  ACMCertificateARN:
+    Description: ARN of the ACM Certificate to use for the CloudFront Distribution 
+    Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -12,6 +22,7 @@ Globals:
     Timeout: 10
 
 Resources:
+# S3 Storage Layer
   S3RekognitionBucket:
     Type: "AWS::S3::Bucket"
     Properties:
@@ -38,7 +49,79 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-  
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireObjectsAfter7Days
+            ExpirationInDays: 7
+            Status: 'Enabled'
+
+# CloudFront CDN Deployment
+  CloudFrontDistribution:
+    Type: "AWS::CloudFront::Distribution"
+    Properties:
+      DistributionConfig: #required
+        Aliases:
+          - !Ref CustomCloudFrontDomain
+        Enabled: True
+        HttpVersion: 'http2'
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET 
+            - HEAD
+          CachedMethods:
+            - GET 
+            - HEAD
+          Compress: True 
+          ForwardedValues:
+            QueryString: False
+          TargetOriginId: sam-cdn-origin
+          ViewerProtocolPolicy: redirect-to-https
+        Origins:
+          -
+            DomainName: !Sub ${S3OutputBucket}.s3.amazonaws.com
+            Id: sam-cdn-origin
+            S3OriginConfig:
+              OriginAccessIdentity:
+                Fn::Join:
+                  - ''
+                  -
+                    - origin-access-identity/cloudfront/
+                    - !Ref CloudFrontOriginAccessIdentity
+        PriceClass: 'PriceClass_100'
+        ViewerCertificate:
+          AcmCertificateArn: !Ref ACMCertificateARN
+          MinimumProtocolVersion: TLSv1.2_2018
+          SslSupportMethod: sni-only
+  CloudFrontOriginAccessIdentity:
+    Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    Properties:
+      CloudFrontOriginAccessIdentityConfig: #required
+        Comment: CloudFront OAI for S3 Output Bucket
+  CloudFrontOAIBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref S3OutputBucket
+      PolicyDocument: 
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 
+              - s3:GetObject
+            Resource: 
+              - !Sub arn:aws:s3:::${S3OutputBucket}/*
+            Principal:
+              CanonicalUser: !GetAtt CloudFrontOriginAccessIdentity.S3CanonicalUserId
+  CloudFrontRecordsSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      AliasTarget:
+        DNSName: !Ref CloudFrontDistribution
+        HostedZoneId: Z2FDTNDATAQYW2
+      HostedZoneName: !Ref Route53HostedZoneName
+      Name: !Ref CustomCloudFrontDomain
+      Type: A
+
+# Rekognition Backend
   RekognitionRole:
     Type: "AWS::IAM::Role"
     Properties:
@@ -75,11 +158,16 @@ Resources:
           -
             Effect: "Allow"
             Action: 
-              - "s3:Get*"
-              - "s3:List*"
+              - "s3:GetObject"
+              - "s3:DeleteObject"
             Resource:
-              - !Sub "arn:aws:s3:::${S3RekognitionBucket}"
-              - !Sub "arn:aws:s3:::${S3RekognitionBucket}/*"
+              - !Sub arn:aws:s3:::${S3RekognitionBucket}/*
+          -
+            Effect: "Allow"
+            Action: 
+              - "s3:PutObject"
+            Resource:
+              - !Sub arn:aws:s3:::${S3OutputBucket}/*              
           -
             Effect: "Allow"
             Action: 
@@ -87,29 +175,24 @@ Resources:
             Resource: "*"
       Roles:
         - !Ref RekognitionRole
-
   RekognitionFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: rekognition_backend/
       Handler: app.lambda_handler
       Role: !GetAtt RekognitionRole.Arn
-      Timeout: 60
       Environment:
         Variables:
-          S3BucketInput: !Ref S3RekognitionBucket
           S3BucketOutput: !Ref S3OutputBucket
       Events:
         CheckForImages:
-          Type: Schedule
+          Type: S3
           Properties:
-            Schedule: rate(5 minutes)
+            Bucket: !Ref S3RekognitionBucket
+            Events: s3:ObjectCreated:*
 
 Outputs:
   RekognitionFunction:
     Description: Rekognition Backend Function ARN
     Value: !GetAtt RekognitionFunction.Arn
-  # HelloWorldFunctionIamRole:
-  #   Description: "Implicit IAM Role created for Hello World function"
-  #   Value: !GetAtt HelloWorldFunctionRole.Arn
  
