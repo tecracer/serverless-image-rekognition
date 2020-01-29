@@ -1,42 +1,40 @@
-import json
 import os
 import logging
 import boto3
-
-# import requests
 
 
 def lambda_handler(event, context):
     logger = logging.getLogger()
 
     try:
-        s3Bucket = os.environ['S3BucketInput']
+        s3OutputBucket = os.environ['S3BucketOutput']
     except:
-        logger.error('No S3 Bucket provided in the environment')
+        logger.error('No S3 Output Bucket provided in the environment')
         exit()
 
-    bodyValue = get_image_keys(s3Bucket)
+    s3Details = get_image_keys(event)
 
-    if bodyValue:
-        for content in bodyValue:
-            print(content['Key'])
-            labels = rekognize_image(content['Key'], s3Bucket)
-            print(labels)
-    else:
-        exit()
+    response = rekognize_image(s3Details['objectKey'], s3Details['bucket'])
 
+    identified_prefix = identify_prefix(response['Labels'])
 
-def get_image_keys(s3BucketName):
-    s3client = boto3.client('s3')
-
-    response = s3client.list_objects_v2(
-        Bucket=s3BucketName,
+    move_object_to_output(
+        s3Details['objectKey'],
+        s3Details['bucket'],
+        s3OutputBucket,
+        identified_prefix
     )
 
-    if 'Contents' in response:
-        return response['Contents']
-    else:
-        return None
+
+def get_image_keys(s3Event):
+    s3Record = s3Event['Records'][0]
+
+    response = {
+        'bucket': s3Record['s3']['bucket']['name'],
+        'objectKey': s3Record['s3']['object']['key']
+    }
+
+    return response
 
 
 def rekognize_image(objectKey, s3BucketName):
@@ -51,5 +49,37 @@ def rekognize_image(objectKey, s3BucketName):
         },
         MaxLabels=3
     )
+
+    return response
+
+
+def identify_prefix(labels):
+    for label in labels:
+        if 'Cat' in label['Name']:
+            return 'cat'
+        elif 'Dog' in label['Name']:
+            return 'dog'
+
+    return 'other'
+
+
+def move_object_to_output(objectKey, s3OriginBucket,  s3OutputBucket, identified_prefix):
+    s3client = boto3.client('s3')
+
+    response = s3client.copy_object(
+        Bucket=s3OutputBucket,
+        Key=f'{identified_prefix}/{objectKey}',
+        CopySource={
+            'Bucket': s3OriginBucket,
+            'Key': objectKey
+        },
+        StorageClass='ONEZONE_IA'
+    )
+
+    if response['ResponseMetadata']['HTTPStatusCode'] == 200:
+        response = s3client.delete_object(
+            Bucket=s3OriginBucket,
+            Key=objectKey
+        )
 
     return response
