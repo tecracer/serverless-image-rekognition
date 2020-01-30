@@ -1,0 +1,74 @@
+import * as cdk from '@aws-cdk/core';
+import { Bucket, BlockPublicAccess, BucketAccessControl, BucketEncryption, BucketPolicy } from "@aws-cdk/aws-s3";
+import { BucketDeployment, Source } from "@aws-cdk/aws-s3-deployment";
+import { CloudFrontWebDistribution, OriginAccessIdentity, HttpVersion, PriceClass, ViewerProtocolPolicy } from "@aws-cdk/aws-cloudfront";
+import { PolicyStatement, Effect, CanonicalUserPrincipal } from "@aws-cdk/aws-iam";
+import { RemovalPolicy } from '@aws-cdk/core';
+
+export interface StaticWebsiteStackProps extends cdk.StackProps {
+  customCloudfrontDomain: string,
+  customCloudfrontCertificate: string
+}
+
+export class StaticWebsiteStack extends cdk.Stack {
+  constructor(scope: cdk.Construct, id: string, props: StaticWebsiteStackProps) {
+    super(scope, id, props);
+
+    const staticWebsiteBucket = new Bucket(this, 'StaticWebsiteBucket', {
+      accessControl: BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      encryption: BucketEncryption.KMS_MANAGED,
+      removalPolicy: RemovalPolicy.DESTROY
+    });
+
+    const staticWebsiteOai = new OriginAccessIdentity(this, 'StaticWebsiteOai', {
+      comment: 'Identity to reach the StaticWebsiteBucket from CloudFront'
+    });
+
+    const staticWebsiteBucketPolicyStatement = new PolicyStatement({
+      actions: ['s3:GetObject'],
+      effect: Effect.ALLOW,
+      resources: [`${staticWebsiteBucket.bucketArn}/*`],
+      principals: [
+        new CanonicalUserPrincipal(staticWebsiteOai.cloudFrontOriginAccessIdentityS3CanonicalUserId)
+      ]
+    });
+
+    staticWebsiteBucket.addToResourcePolicy(staticWebsiteBucketPolicyStatement)
+
+    const cloudfrontDistribution = new CloudFrontWebDistribution(this, 'StaticWebsiteCloudFront', {
+      originConfigs: [
+        {
+          behaviors: [{
+            isDefaultBehavior: true,
+          }],
+          s3OriginSource: {
+            s3BucketSource: staticWebsiteBucket,
+            originAccessIdentity: staticWebsiteOai
+          }
+        }
+      ],
+      defaultRootObject: 'index.html',
+      httpVersion: HttpVersion.HTTP2,
+      priceClass: PriceClass.PRICE_CLASS_100,
+      viewerCertificate: {
+        aliases: [props.customCloudfrontDomain],
+        props: {
+          acmCertificateArn: props.customCloudfrontCertificate,
+          minimumProtocolVersion: 'TLSv1.2_2018',
+          sslSupportMethod: 'sni-only'
+        }
+      },
+      viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+    })
+
+    new BucketDeployment(this, 'StaticWebsiteDeployment', {
+      destinationBucket: staticWebsiteBucket,
+      sources: [
+        Source.asset('assets')
+      ],
+      distribution: cloudfrontDistribution,
+      retainOnDelete: false
+    })
+  }
+}

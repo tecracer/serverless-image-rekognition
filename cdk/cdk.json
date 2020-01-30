@@ -1,0 +1,8 @@
+{
+  "app": "npx ts-node bin/cdk.ts",
+  "context": {
+    "region": "eu-central-1",
+    "cloudfrontdomain": "awsusergroup.wien",
+    "customcloudfrontcertificate": "arn:aws:acm:us-east-1:180541654625:certificate/cd2db6bc-6f5a-41ac-9bfc-f31e25dce5dd"
+  }
+}
