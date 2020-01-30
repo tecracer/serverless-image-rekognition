@@ -1,12 +1,15 @@
 import * as cdk from '@aws-cdk/core';
-import { Bucket, BlockPublicAccess, BucketAccessControl, BucketEncryption, BucketPolicy } from "@aws-cdk/aws-s3";
+import { Bucket, BlockPublicAccess, BucketAccessControl, BucketEncryption } from "@aws-cdk/aws-s3";
 import { BucketDeployment, Source } from "@aws-cdk/aws-s3-deployment";
 import { CloudFrontWebDistribution, OriginAccessIdentity, HttpVersion, PriceClass, ViewerProtocolPolicy } from "@aws-cdk/aws-cloudfront";
 import { PolicyStatement, Effect, CanonicalUserPrincipal } from "@aws-cdk/aws-iam";
 import { RemovalPolicy } from '@aws-cdk/core';
+import { RecordSet, RecordType, RecordTarget, HostedZone } from "@aws-cdk/aws-route53";
+import { CloudFrontTarget } from "@aws-cdk/aws-route53-targets";
 
 export interface StaticWebsiteStackProps extends cdk.StackProps {
   customCloudfrontDomain: string,
+  customCloudfrontHostedZone: string,
   customCloudfrontCertificate: string
 }
 
@@ -17,7 +20,7 @@ export class StaticWebsiteStack extends cdk.Stack {
     const staticWebsiteBucket = new Bucket(this, 'StaticWebsiteBucket', {
       accessControl: BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      encryption: BucketEncryption.KMS_MANAGED,
+      encryption: BucketEncryption.S3_MANAGED,
       removalPolicy: RemovalPolicy.DESTROY
     });
 
@@ -60,6 +63,18 @@ export class StaticWebsiteStack extends cdk.Stack {
         }
       },
       viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+    });
+
+
+
+    new RecordSet(this, 'CloudFrontCustomDomainRecordsSet', {
+      recordType: RecordType.A,
+      target: RecordTarget.fromAlias(new CloudFrontTarget(cloudfrontDistribution)),
+      zone: HostedZone.fromLookup(this, 'HostedZoneLookup', {
+        domainName: props.customCloudfrontDomain,
+        privateZone: false
+      }),
+      recordName: props.customCloudfrontDomain
     })
 
     new BucketDeployment(this, 'StaticWebsiteDeployment', {

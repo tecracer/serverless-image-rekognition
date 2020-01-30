@@ -1,4 +1,8 @@
 {
   "@aws-cdk/core:enableStackNameDuplicates": "true",
-  "aws-cdk:enableDiffNoFail": "true"
+  "aws-cdk:enableDiffNoFail": "true",
+  "hosted-zone:account=180541654625:domainName=awsusergroup.wien:privateZone=false:region=eu-central-1": {
+    "Id": "/hostedzone/Z16P60R7VQ7HYW",
+    "Name": "awsusergroup.wien."
+  }
 }
