@@ -8,11 +8,17 @@ Parameters:
   CustomCloudFrontDomain:
     Description: Custom Domain to use for the CloudFront Distribution 
     Type: String
-  Route53HostedZoneName:
-    Description: Custom Hosted Zone Name which should contain the Custom Domain Name for the Distribution
+  Route53HostedZoneId:   
+    Description: Custom Hosted Zone Id which should contain the Custom Domain Name for the Distribution and API GW
     Type: String
   ACMCertificateARN:
     Description: ARN of the ACM Certificate to use for the CloudFront Distribution 
+    Type: String
+  APIDomain:
+    Description: Custom Domain Name to use for the API Gateway
+    Type: String
+  APIDomainCertificateARN:
+    Description: ARN of the ACM Certificate to use for the API Gateway Domain
     Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -117,7 +123,7 @@ Resources:
       AliasTarget:
         DNSName: !GetAtt CloudFrontDistribution.DomainName
         HostedZoneId: Z2FDTNDATAQYW2
-      HostedZoneName: !Ref Route53HostedZoneName
+      HostedZoneId: !Ref Route53HostedZoneId
       Name: !Ref CustomCloudFrontDomain
       Type: A
 
@@ -190,6 +196,34 @@ Resources:
           Properties:
             Bucket: !Ref S3RekognitionBucket
             Events: s3:ObjectCreated:*
+
+# Delivery API
+  DeliveryApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      EndpointConfiguration: EDGE
+      Cors: !Sub "'${APIDomain}'"
+      Domain:
+        DomainName: !Ref APIDomain
+        CertificateArn: !Ref APIDomainCertificateARN
+        EndpointConfiguration: EDGE
+        BasePath:
+          - /
+        Route53:
+          HostedZoneId: !Ref Route53HostedZoneId
+  DeliveryFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: delivery_function/
+      Handler: app.lambda_handler
+      Events:
+        DeliverBase:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+            RestApiId: !Ref DeliveryApi
 
 Outputs:
   RekognitionFunction:
