@@ -203,7 +203,8 @@ Resources:
     Properties:
       StageName: Prod
       EndpointConfiguration: EDGE
-      Cors: !Sub "'${APIDomain}'"
+      Cors: 
+        AllowOrigin: !Sub "'${APIDomain}'"
       Domain:
         DomainName: !Ref APIDomain
         CertificateArn: !Ref APIDomainCertificateARN
