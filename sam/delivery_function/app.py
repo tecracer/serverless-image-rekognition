@@ -8,4 +8,9 @@ def lambda_handler(event, context):
         "body": json.dumps({
             "message": "API Working",
         }),
+        "headers": {
+            'Access-Control-Allow-Origin': 'https://awsusergroup.wien',
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Allow-Methods": "OPTIONS,GET"
+        },
     }
