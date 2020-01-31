@@ -59,6 +59,8 @@ def identify_prefix(labels):
             return 'cat'
         elif 'Dog' in label['Name']:
             return 'dog'
+        elif 'Squirrel' in label['Name']:
+            return 'squirrel'
 
     return 'other'
 
