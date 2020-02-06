@@ -61,6 +61,27 @@ Resources:
             ExpirationInDays: 7
             Status: 'Enabled'
 
+# DynamoDB Storage Layer
+  ClassifiedDynamoTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - 
+          AttributeName: category
+          AttributeType: S
+        - 
+          AttributeName: timestamp
+          AttributeType: N
+      BillingMode: PAY_PER_REQUEST
+      KeySchema: #required
+        - 
+          AttributeName: category
+          KeyType: HASH
+        - 
+          AttributeName: timestamp
+          KeyType: RANGE
+      TableName: RekognitionOutputTable
+  
 # CloudFront CDN Deployment
   CloudFrontDistribution:
     Type: "AWS::CloudFront::Distribution"
@@ -179,6 +200,12 @@ Resources:
             Action: 
               - "rekognition:DetectLabels"
             Resource: "*"
+          -
+            Effect: "Allow"
+            Action: 
+              - "DynamoDB:UpdateItem"
+            Resource:
+              - !GetAtt ClassifiedDynamoTable.Arn
       Roles:
         - !Ref RekognitionRole
   RekognitionFunction:
@@ -190,6 +217,7 @@ Resources:
       Environment:
         Variables:
           S3BucketOutput: !Ref S3OutputBucket
+          DynamoTable: !Ref ClassifiedDynamoTable
       Events:
         CheckForImages:
           Type: S3
@@ -223,6 +251,63 @@ Resources:
           Type: Api
           Properties:
             Path: /
+            Method: get
+            RestApiId: !Ref DeliveryApi
+  GetCatsRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM Role for GetCats Backend Lambda Function
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      RoleName: 
+        Fn::Join:
+          -
+            "-"
+          - 
+            - "GetCatsFunction"
+            - !Ref AWS::Region
+            - "Role"
+  GetCatsRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: IAM Policy for GetCats Backend Lambda Function
+      ManagedPolicyName: GetCatsFunction-Policy
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "DynamoDB:Query"
+            Resource:
+              - !GetAtt ClassifiedDynamoTable.Arn
+      Roles:
+        - !Ref GetCatsRole
+  GetCatsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: get_cats/
+      Handler: app.lambda_handler
+      Role: !GetAtt GetCatsRole.Arn
+      Environment:
+        Variables:
+          DynamoTable: !Ref ClassifiedDynamoTable
+      Events:
+        DeliverBase:
+          Type: Api
+          Properties:
+            Path: /cats
             Method: get
             RestApiId: !Ref DeliveryApi
 

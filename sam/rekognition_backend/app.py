@@ -1,5 +1,6 @@
 import os
 import logging
+import time
 import boto3
 
 
@@ -8,8 +9,9 @@ def lambda_handler(event, context):
 
     try:
         s3OutputBucket = os.environ['S3BucketOutput']
+        dynamoTable = os.environ['DynamoTable']
     except:
-        logger.error('No S3 Output Bucket provided in the environment')
+        logger.error('No Enviroment Setup!')
         exit()
 
     s3Details = get_image_keys(event)
@@ -22,7 +24,8 @@ def lambda_handler(event, context):
         s3Details['objectKey'],
         s3Details['bucket'],
         s3OutputBucket,
-        identified_prefix
+        identified_prefix,
+        dynamoTable
     )
 
 
@@ -65,8 +68,9 @@ def identify_prefix(labels):
     return 'other'
 
 
-def move_object_to_output(objectKey, s3OriginBucket,  s3OutputBucket, identified_prefix):
+def move_object_to_output(objectKey, s3OriginBucket,  s3OutputBucket, identified_prefix, dynamoTable):
     s3client = boto3.client('s3')
+    dynamoClient = boto3.client('dynamodb')
 
     response = s3client.copy_object(
         Bucket=s3OutputBucket,
@@ -76,6 +80,26 @@ def move_object_to_output(objectKey, s3OriginBucket,  s3OutputBucket, identified
             'Key': objectKey
         },
         StorageClass='ONEZONE_IA'
+    )
+
+    timestamp = time.time()
+
+    dynamoClient.update_item(
+        TableName=dynamoTable,
+        Key={
+            'category': {
+                'S': identified_prefix
+            },
+            'timestamp': {
+                'N': str(timestamp)
+            }
+        },
+        UpdateExpression='SET objectkey = :val',
+        ExpressionAttributeValues={
+            ':val': {
+                'S': f'{identified_prefix}/{objectKey}'
+            }
+        },
     )
 
     if response['ResponseMetadata']['HTTPStatusCode'] == 200:
