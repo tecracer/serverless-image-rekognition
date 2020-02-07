@@ -17,26 +17,26 @@
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
     integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
     crossorigin="anonymous"></script>
-  <link rel='stylesheet' type='text/css' media='screen' href='lib/fontawesome/css/all.css'>
-  <link rel='stylesheet' type='text/css' media='screen' href='main.min.css'>
-  <script type="text/javascript" src="lib/axios/dist/axios.standalone.js"></script>
-  <script type="text/javascript" src="lib/CryptoJS/rollups/hmac-sha256.js"></script>
-  <script type="text/javascript" src="lib/CryptoJS/rollups/sha256.js"></script>
-  <script type="text/javascript" src="lib/CryptoJS/components/hmac.js"></script>
-  <script type="text/javascript" src="lib/CryptoJS/components/enc-base64.js"></script>
-  <script type="text/javascript" src="lib/url-template/url-template.js"></script>
-  <script type="text/javascript" src="lib/apiGatewayCore/sigV4Client.js"></script>
-  <script type="text/javascript" src="lib/apiGatewayCore/apiGatewayClient.js"></script>
-  <script type="text/javascript" src="lib/apiGatewayCore/simpleHttpClient.js"></script>
-  <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
-  <script type="text/javascript" src="apigClient.js"></script>
-  <script src='main.js'></script>
+  <link rel='stylesheet' type='text/css' media='screen' href='../lib/fontawesome/css/all.css'>
+  <link rel='stylesheet' type='text/css' media='screen' href='../main.min.css'>
+  <script type="text/javascript" src="../lib/axios/dist/axios.standalone.js"></script>
+  <script type="text/javascript" src="../lib/CryptoJS/rollups/hmac-sha256.js"></script>
+  <script type="text/javascript" src="../lib/CryptoJS/rollups/sha256.js"></script>
+  <script type="text/javascript" src="../lib/CryptoJS/components/hmac.js"></script>
+  <script type="text/javascript" src="../lib/CryptoJS/components/enc-base64.js"></script>
+  <script type="text/javascript" src="../lib/url-template/url-template.js"></script>
+  <script type="text/javascript" src="../lib/apiGatewayCore/sigV4Client.js"></script>
+  <script type="text/javascript" src="../lib/apiGatewayCore/apiGatewayClient.js"></script>
+  <script type="text/javascript" src="../lib/apiGatewayCore/simpleHttpClient.js"></script>
+  <script type="text/javascript" src="../lib/apiGatewayCore/utils.js"></script>
+  <script type="text/javascript" src="../apigClient.js"></script>
+  <script src='../main.js'></script>
 </head>
 
 <body>
   <div class="row trc-brand">
     <div class="col-md-12 col-lg-12 col-xl-12">
-      <img class="trc-brand-logo" src="img/tR-logo.svg" alt="presented by tecRacer" align="left" /></div>
+      <img class="trc-brand-logo" src="../img/tR-logo.svg" alt="presented by tecRacer" align="left" /></div>
   </div>
   <nav class="navbar navbar-expand-lg navbar-dark trc-bg-orange">
     <a class="navbar-brand" href="#">AWS UserGroup Vienna</a>
@@ -47,20 +47,20 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
-        <li class="nav-item active">
-          <a class="nav-link" href="/index.html">Home <span class="sr-only">(current)</span></a>
+        <li class="nav-item">
+          <a class="nav-link" href="../index.html">Home <span class="sr-only">(current)</span></a>
         </li>
         <li class="nav-item">
           <a class="nav-link disabled" id="trc-api-upload" href="#">Upload</a>
         </li>
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown active">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
             aria-haspopup="true" aria-expanded="false">
             View
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <a class="dropdown-item disabled" href="#">Squirrels</a>
-            <a class="dropdown-item disabled" id="trc-cats-view" href="/cats/index.html">Cats</a>
+            <a class="dropdown-item disabled active" id="trc-cats-view" href="/cats/index.html">Cats</a>
             <a class="dropdown-item disabled" href="#">Dogs</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#">Others</a>
@@ -93,6 +93,11 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <div class="container">
+    <div class="row trc-cat-gallery">
+    </div>
   </div>
 
 </body>
