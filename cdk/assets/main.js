@@ -36,17 +36,44 @@ function getApiStatus() {
   }
 };
 
+const toBase64 = file => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = error => reject(error);
+});
+
+async function Main() {
+  const file = document.querySelector('#myfile').files[0];
+  console.log(await toBase64(file));
+}
+
 function uploadImage() {
-  // var apigClient = apigClientFactory.newClient();
-  // var params = {};
-  // var body = {};
-  // var additionalParams = {};
 
-  // apigClient.uploadPost(params, body, additionalParams)
+  myFiles = $('#inputGroupFileUpload').prop('files');
 
-  myFiles = $('#inputGroupFileUpload').prop('files')
+  if (myFiles.length > 0) {
+    var apigClient = apigClientFactory.newClient();
+    var params = {};
+    var additionalParams = {};
 
-  console.log(myFiles)
+    Array.from(myFiles).forEach(async file => {
+
+      var base64Full = await toBase64(file);
+
+      var regEx = /.*(;base64,)(.*)/gm;
+      var base64Matches = regEx.exec(base64Full)
+
+      var body = JSON.stringify({
+        'encoded_image': base64Matches[2]
+      });
+
+      console.log(body);
+
+      apigClient.uploadPost(params, body, additionalParams);
+    });
+  };
+
 };
 
 function getCats() {
@@ -72,7 +99,6 @@ function checkForCats(client, params, body, additionalParams) {
       }).catch(function (result) {
         console.log(result);
       });
-
   };
 };
 
