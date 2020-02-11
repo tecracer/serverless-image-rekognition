@@ -1,6 +1,6 @@
 import json
 import logging
-import time
+import uuid
 import os
 import base64
 import boto3
@@ -27,7 +27,7 @@ def lambda_handler(event, context):
         "headers": {
             'Access-Control-Allow-Origin': 'https://awsusergroup.wien',
             "Access-Control-Allow-Headers": "Content-Type",
-            "Access-Control-Allow-Methods": "OPTIONS,GET"
+            "Access-Control-Allow-Methods": "OPTIONS,POST"
         },
     }
 
@@ -36,9 +36,9 @@ def upload_image(encoded_image, bucket):
     decoded_image = base64.b64decode(encoded_image)
     s3Client = boto3.client('s3')
 
-    timestamp = int(time.time())
+    fileuuid = str(uuid.uuid4())
 
-    filekey = f'{timestamp}.jpg'
+    filekey = f'{fileuuid}.jpg'
 
     response = s3Client.put_object(
         ACL='bucket-owner-full-control',
