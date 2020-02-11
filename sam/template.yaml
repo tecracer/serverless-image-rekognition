@@ -20,6 +20,9 @@ Parameters:
   APIDomainCertificateARN:
     Description: ARN of the ACM Certificate to use for the API Gateway Domain
     Type: String
+  BaseDomain:
+    Description: Base Static Website Domain
+    Type: String
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -232,7 +235,8 @@ Resources:
       StageName: Prod
       EndpointConfiguration: EDGE
       Cors: 
-        AllowOrigin: !Sub "'${APIDomain}'"
+        AllowOrigin: !Sub "'https://${BaseDomain}'"
+        AllowHeaders: "'Content-Type'"
       Domain:
         DomainName: !Ref APIDomain
         CertificateArn: !Ref APIDomainCertificateARN
