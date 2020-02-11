@@ -310,6 +310,63 @@ Resources:
             Path: /cats
             Method: get
             RestApiId: !Ref DeliveryApi
+  UploadImageRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM Role for GetCats Backend Lambda Function
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      RoleName: 
+        Fn::Join:
+          -
+            "-"
+          - 
+            - "UploadImageFunction"
+            - !Ref AWS::Region
+            - "Role"
+  UploadImageRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: IAM Policy for Upload Image Lambda Function
+      ManagedPolicyName: UploadImageFunction-Policy
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "s3:PutObject"
+            Resource:
+              - !Sub arn:aws:s3:::${S3RekognitionBucket}/*
+      Roles:
+        - !Ref UploadImageRole
+  UploadImagesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: upload_image/
+      Handler: app.lambda_handler
+      Role: !GetAtt UploadImageRole.Arn
+      Environment:
+        Variables:
+          S3BucketInput: !Ref S3RekognitionBucket
+      Events:
+        DeliverBase:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
+            RestApiId: !Ref DeliveryApi
 
 Outputs:
   RekognitionFunction:

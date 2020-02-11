@@ -48,10 +48,11 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <a class="nav-link" href="../index.html">Home <span class="sr-only">(current)</span></a>
+          <a class="nav-link" href="../index.html">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" id="trc-api-upload" href="../upload/index.html">Upload</a>
+          <a class="nav-link active" id="trc-api-upload" href="/upload/index.html">Upload <span
+              class="sr-only">(current)</span></a>
         </li>
         <li class="nav-item dropdown active">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
@@ -60,7 +61,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdown">
             <a class="dropdown-item disabled" href="#">Squirrels</a>
-            <a class="dropdown-item disabled active" id="trc-cats-view" href="/cats/index.html">Cats</a>
+            <a class="dropdown-item disabled" id="trc-cats-view" href="../cats/index.html">Cats</a>
             <a class="dropdown-item disabled" href="#">Dogs</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#">Others</a>
@@ -96,7 +97,16 @@
   </div>
 
   <div class="container">
-    <div class="row trc-cat-gallery">
+    <div class="input-group">
+      <div class="custom-file">
+        <input type="file" class="custom-file-input" id="inputGroupFileUpload"
+          aria-describedby="inputGroupFileUploadAddon">
+        <label class="custom-file-label" for="inputGroupFileUpload">Choose file</label>
+      </div>
+      <div class="input-group-append">
+        <button class="btn btn-outline-secondary" type="button" id="inputGroupFileUploadAddon"
+          onclick="uploadImage()">Upload</button>
+      </div>
     </div>
   </div>
 

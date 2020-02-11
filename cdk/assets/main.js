@@ -1,5 +1,10 @@
 $(document).ready(function () {
   getApiStatus();
+
+  $('input[type="file"]').change(function (e) {
+    var fileName = e.target.files[0].name;
+    $('.custom-file-label').html(fileName);
+  });
 });
 
 function getApiStatus() {
@@ -29,6 +34,19 @@ function getApiStatus() {
   } catch (error) {
     console.log(error);
   }
+};
+
+function uploadImage() {
+  // var apigClient = apigClientFactory.newClient();
+  // var params = {};
+  // var body = {};
+  // var additionalParams = {};
+
+  // apigClient.uploadPost(params, body, additionalParams)
+
+  myFiles = $('#inputGroupFileUpload').prop('files')
+
+  console.log(myFiles)
 };
 
 function getCats() {
