@@ -11,6 +11,7 @@ function getApiStatus() {
   checkCatsApi();
   checkDogsApi();
   checkSquirrelsApi();
+  checkOthersApi();
 };
 
 function refreshCatsApi() {
@@ -47,6 +48,18 @@ function refreshSquirrelsApi() {
   $('#trc-squirrels-status').removeClass('trc-color-green');
 
   checkSquirrelsApi();
+};
+
+function refreshOthersApi() {
+  $('.trc-other-gallery').empty();
+
+  $('#trc-others-view').addClass('disabled');
+  $('#trc-others-status').addClass('fa-times-circle');
+  $('#trc-others-status').removeClass('fa-check-circle');
+  $('#trc-others-status').addClass('trc-color-red');
+  $('#trc-others-status').removeClass('trc-color-green');
+
+  checkOthersApi();
 };
 
 function checkCatsApi() {
@@ -125,6 +138,33 @@ function checkSquirrelsApi() {
         $('#trc-squirrels-status').removeClass('fa-check-circle');
         $('#trc-squirrels-status').addClass('trc-color-red');
         $('#trc-squirrels-status').removeClass('trc-color-green');
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+function checkOthersApi() {
+  var apigClient = apigClientFactory.newClient();
+  var params = {};
+  var body = {};
+  var additionalParams = {};
+
+  try {
+    apigClient.othersGet(params, body, additionalParams)
+      .then(function (result) {
+        $('#trc-others-view').removeClass('disabled');
+        $('#trc-others-status').removeClass('fa-times-circle');
+        $('#trc-others-status').addClass('fa-check-circle');
+        $('#trc-others-status').removeClass('trc-color-red');
+        $('#trc-others-status').addClass('trc-color-green');
+        getOthers();
+      }).catch(function (result) {
+        $('#trc-others-view').addClass('disabled');
+        $('#trc-others-status').addClass('fa-times-circle');
+        $('#trc-others-status').removeClass('fa-check-circle');
+        $('#trc-others-status').addClass('trc-color-red');
+        $('#trc-others-status').removeClass('trc-color-green');
       });
   } catch (error) {
     console.log(error);
@@ -244,4 +284,28 @@ function checkForSquirrels(client, params, body, additionalParams) {
   };
 };
 
+function getOthers() {
+  var apigClient = apigClientFactory.newClient();
+  var params = {};
+  var body = {};
+  var additionalParams = {};
 
+  checkForOthers(apigClient);
+};
+
+function checkForOthers(client, params, body, additionalParams) {
+  if ($('div').hasClass('trc-other-gallery') && !$('#trc-other-view').hasClass('disabled')) {
+    client.othersGet(params, body, additionalParams)
+      .then(function (result) {
+        result.data.others.forEach(other => {
+          $('.trc-other-gallery').append(`
+          <div class="col-md-4 col-lg-4 col-xl-4">
+            <img src="https://cdn.awsusergroup.wien/${other.objectkey}" class="img-fluid" alt="${other.objectkey}" id="${other.objectkey}" />
+          </div>`)
+          console.log(other.objectkey)
+        });
+      }).catch(function (result) {
+        console.log(result);
+      });
+  };
+};

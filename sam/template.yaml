@@ -219,7 +219,7 @@ Resources:
       Role: !GetAtt RekognitionRole.Arn
       AutoPublishAlias: prodBackend
       DeploymentPreference:
-        Type: Linear10PercentEvery10Minutes
+        Type: Linear10PercentEvery1Minute
         Alarms:
           - !Ref AliasErrorMetricGreaterThanZeroAlarm
           - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
@@ -523,6 +523,63 @@ Resources:
           Type: Api
           Properties:
             Path: /squirrels
+            Method: get
+            RestApiId: !Ref DeliveryApi
+  GetOthersRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM Role for GetOthers Backend Lambda Function
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      RoleName: 
+        Fn::Join:
+          -
+            "-"
+          - 
+            - "GetOthersFunction"
+            - !Ref AWS::Region
+            - "Role"
+  GetOthersRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: IAM Policy for GetOthers Backend Lambda Function
+      ManagedPolicyName: GetOthersFunction-Policy
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "DynamoDB:Query"
+            Resource:
+              - !GetAtt ClassifiedDynamoTable.Arn
+      Roles:
+        - !Ref GetOthersRole
+  GetOthersFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: get_others/
+      Handler: app.lambda_handler
+      Role: !GetAtt GetOthersRole.Arn
+      Environment:
+        Variables:
+          DynamoTable: !Ref ClassifiedDynamoTable
+      Events:
+        DeliverBase:
+          Type: Api
+          Properties:
+            Path: /others
             Method: get
             RestApiId: !Ref DeliveryApi
 
