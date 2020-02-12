@@ -10,6 +10,7 @@ $(document).ready(function () {
 function getApiStatus() {
   checkCatsApi();
   checkDogsApi();
+  checkSquirrelsApi();
 };
 
 function refreshCatsApi() {
@@ -34,6 +35,18 @@ function refreshDogsApi() {
   $('#trc-dogs-status').removeClass('trc-color-green');
 
   checkDogsApi();
+};
+
+function refreshSquirrelsApi() {
+  $('.trc-squirrel-gallery').empty();
+
+  $('#trc-squirrels-view').addClass('disabled');
+  $('#trc-squirrels-status').addClass('fa-times-circle');
+  $('#trc-squirrels-status').removeClass('fa-check-circle');
+  $('#trc-squirrels-status').addClass('trc-color-red');
+  $('#trc-squirrels-status').removeClass('trc-color-green');
+
+  checkSquirrelsApi();
 };
 
 function checkCatsApi() {
@@ -85,6 +98,33 @@ function checkDogsApi() {
         $('#trc-dogs-status').removeClass('fa-check-circle');
         $('#trc-dogs-status').addClass('trc-color-red');
         $('#trc-dogs-status').removeClass('trc-color-green');
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+function checkSquirrelsApi() {
+  var apigClient = apigClientFactory.newClient();
+  var params = {};
+  var body = {};
+  var additionalParams = {};
+
+  try {
+    apigClient.SquirrelsGet(params, body, additionalParams)
+      .then(function (result) {
+        $('#trc-squirrels-view').removeClass('disabled');
+        $('#trc-squirrels-status').removeClass('fa-times-circle');
+        $('#trc-squirrels-status').addClass('fa-check-circle');
+        $('#trc-squirrels-status').removeClass('trc-color-red');
+        $('#trc-squirrels-status').addClass('trc-color-green');
+        getSquirrels();
+      }).catch(function (result) {
+        $('#trc-squirrels-view').addClass('disabled');
+        $('#trc-squirrels-status').addClass('fa-times-circle');
+        $('#trc-squirrels-status').removeClass('fa-check-circle');
+        $('#trc-squirrels-status').addClass('trc-color-red');
+        $('#trc-squirrels-status').removeClass('trc-color-green');
       });
   } catch (error) {
     console.log(error);
@@ -171,6 +211,32 @@ function checkForDogs(client, params, body, additionalParams) {
             <img src="https://cdn.awsusergroup.wien/${dog.objectkey}" class="img-fluid" alt="${dog.objectkey}" id="${dog.objectkey}" />
           </div>`)
           console.log(dog.objectkey)
+        });
+      }).catch(function (result) {
+        console.log(result);
+      });
+  };
+};
+
+function getSquirrels() {
+  var apigClient = apigClientFactory.newClient();
+  var params = {};
+  var body = {};
+  var additionalParams = {};
+
+  checkForSquirrels(apigClient);
+};
+
+function checkForSquirrels(client, params, body, additionalParams) {
+  if ($('div').hasClass('trc-squirrel-gallery') && !$('#trc-squirrel-view').hasClass('disabled')) {
+    client.squirrelsGet(params, body, additionalParams)
+      .then(function (result) {
+        result.data.squirrels.forEach(squirrel => {
+          $('.trc-squirrel-gallery').append(`
+          <div class="col-md-4 col-lg-4 col-xl-4">
+            <img src="https://cdn.awsusergroup.wien/${squirrel.objectkey}" class="img-fluid" alt="${squirrel.objectkey}" id="${squirrel.objectkey}" />
+          </div>`)
+          console.log(squirrel.objectkey)
         });
       }).catch(function (result) {
         console.log(result);
