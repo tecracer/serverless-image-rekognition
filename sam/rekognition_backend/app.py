@@ -50,7 +50,7 @@ def rekognize_image(objectKey, s3BucketName):
                 'Name': objectKey,
             },
         },
-        MaxLabels=3
+        MinConfidence=70
     )
 
     return response

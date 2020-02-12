@@ -217,6 +217,12 @@ Resources:
       CodeUri: rekognition_backend/
       Handler: app.lambda_handler
       Role: !GetAtt RekognitionRole.Arn
+      AutoPublishAlias: prodBackend
+      DeploymentPreference:
+        Type: Linear10PercentEvery10Minutes
+        Alarms:
+          - !Ref AliasErrorMetricGreaterThanZeroAlarm
+          - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
       Environment:
         Variables:
           S3BucketOutput: !Ref S3OutputBucket
@@ -227,6 +233,40 @@ Resources:
           Properties:
             Bucket: !Ref S3RekognitionBucket
             Events: s3:ObjectCreated:*
+  AliasErrorMetricGreaterThanZeroAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: Lambda Function Error > 0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${RekognitionFunction}:prodBackend"
+        - Name: FunctionName
+          Value: !Ref RekognitionFunction
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
+  LatestVersionErrorMetricGreaterThanZeroAlarm:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      AlarmDescription: Lambda Function Error > 0
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: Resource
+          Value: !Sub "${RekognitionFunction}:prodBackend"
+        - Name: FunctionName
+          Value: !Ref RekognitionFunction
+        - Name: ExecutedVersion
+          Value: !GetAtt RekognitionFunction.Version.Version
+      EvaluationPeriods: 2
+      MetricName: Errors
+      Namespace: AWS/Lambda
+      Period: 60
+      Statistic: Sum
+      Threshold: 0
 
 # Delivery API
   DeliveryApi:
