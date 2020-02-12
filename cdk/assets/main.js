@@ -8,6 +8,36 @@ $(document).ready(function () {
 });
 
 function getApiStatus() {
+  checkCatsApi();
+  checkDogsApi();
+};
+
+function refreshCatsApi() {
+  $('.trc-cat-gallery').empty();
+
+  $('#trc-cats-view').addClass('disabled');
+  $('#trc-cats-status').addClass('fa-times-circle');
+  $('#trc-cats-status').removeClass('fa-check-circle');
+  $('#trc-cats-status').addClass('trc-color-red');
+  $('#trc-cats-status').removeClass('trc-color-green');
+
+  checkCatsApi();
+};
+
+function refreshDogsApi() {
+  $('.trc-dog-gallery').empty();
+
+  $('#trc-dogs-view').addClass('disabled');
+  $('#trc-dogs-status').addClass('fa-times-circle');
+  $('#trc-dogs-status').removeClass('fa-check-circle');
+  $('#trc-dogs-status').addClass('trc-color-red');
+  $('#trc-dogs-status').removeClass('trc-color-green');
+
+  checkDogsApi();
+};
+
+function checkCatsApi() {
+
   var apigClient = apigClientFactory.newClient();
   var params = {};
   var body = {};
@@ -22,14 +52,39 @@ function getApiStatus() {
         $('#trc-cats-status').removeClass('trc-color-red');
         $('#trc-cats-status').addClass('trc-color-green');
         getCats();
-        setInterval(getApiStatus, 300000);
       }).catch(function (result) {
         $('#trc-cats-view').addClass('disabled');
         $('#trc-cats-status').addClass('fa-times-circle');
         $('#trc-cats-status').removeClass('fa-check-circle');
         $('#trc-cats-status').addClass('trc-color-red');
         $('#trc-cats-status').removeClass('trc-color-green');
-        setInterval(getApiStatus, 30000);
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+function checkDogsApi() {
+  var apigClient = apigClientFactory.newClient();
+  var params = {};
+  var body = {};
+  var additionalParams = {};
+
+  try {
+    apigClient.dogsGet(params, body, additionalParams)
+      .then(function (result) {
+        $('#trc-dogs-view').removeClass('disabled');
+        $('#trc-dogs-status').removeClass('fa-times-circle');
+        $('#trc-dogs-status').addClass('fa-check-circle');
+        $('#trc-dogs-status').removeClass('trc-color-red');
+        $('#trc-dogs-status').addClass('trc-color-green');
+        getDogs();
+      }).catch(function (result) {
+        $('#trc-dogs-view').addClass('disabled');
+        $('#trc-dogs-status').addClass('fa-times-circle');
+        $('#trc-dogs-status').removeClass('fa-check-circle');
+        $('#trc-dogs-status').addClass('trc-color-red');
+        $('#trc-dogs-status').removeClass('trc-color-green');
       });
   } catch (error) {
     console.log(error);
@@ -42,11 +97,6 @@ const toBase64 = file => new Promise((resolve, reject) => {
   reader.onload = () => resolve(reader.result);
   reader.onerror = error => reject(error);
 });
-
-async function Main() {
-  const file = document.querySelector('#myfile').files[0];
-  console.log(await toBase64(file));
-}
 
 function uploadImage() {
 
@@ -95,6 +145,32 @@ function checkForCats(client, params, body, additionalParams) {
             <img src="https://cdn.awsusergroup.wien/${cat.objectkey}" class="img-fluid" alt="${cat.objectkey}" id="${cat.objectkey}" />
           </div>`)
           console.log(cat.objectkey)
+        });
+      }).catch(function (result) {
+        console.log(result);
+      });
+  };
+};
+
+function getDogs() {
+  var apigClient = apigClientFactory.newClient();
+  var params = {};
+  var body = {};
+  var additionalParams = {};
+
+  checkForDogs(apigClient);
+};
+
+function checkForDogs(client, params, body, additionalParams) {
+  if ($('div').hasClass('trc-dog-gallery') && !$('#trc-dog-view').hasClass('disabled')) {
+    client.dogsGet(params, body, additionalParams)
+      .then(function (result) {
+        result.data.dogs.forEach(dog => {
+          $('.trc-dog-gallery').append(`
+          <div class="col-md-4 col-lg-4 col-xl-4">
+            <img src="https://cdn.awsusergroup.wien/${dog.objectkey}" class="img-fluid" alt="${dog.objectkey}" id="${dog.objectkey}" />
+          </div>`)
+          console.log(dog.objectkey)
         });
       }).catch(function (result) {
         console.log(result);
