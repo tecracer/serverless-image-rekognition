@@ -71,7 +71,7 @@
     </div>
   </nav>
 
-  <div class=" container trc-api-status">
+  <div class="container trc-api-status">
     <table class="table table-dark">
       <thead>
         <tr>
@@ -118,6 +118,17 @@
           </td>
           <td>
             <i class="fas fa-sync-alt" onclick="refreshSquirrelsApi()"></i>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Others View API:
+          </td>
+          <td>
+            <i class="fas fa-times-circle trc-color-red" id="trc-others-status"></i>
+          </td>
+          <td>
+            <i class="fas fa-sync-alt" onclick="refreshOthersApi()"></i>
           </td>
         </tr>
       </tbody>
