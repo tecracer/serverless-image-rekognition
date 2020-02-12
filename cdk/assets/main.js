@@ -111,7 +111,7 @@ function checkSquirrelsApi() {
   var additionalParams = {};
 
   try {
-    apigClient.SquirrelsGet(params, body, additionalParams)
+    apigClient.squirrelsGet(params, body, additionalParams)
       .then(function (result) {
         $('#trc-squirrels-view').removeClass('disabled');
         $('#trc-squirrels-status').removeClass('fa-times-circle');
