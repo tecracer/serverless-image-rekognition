@@ -58,11 +58,6 @@ Resources:
         BlockPublicPolicy: True
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
-      LifecycleConfiguration:
-        Rules:
-          - Id: ExpireObjectsAfter7Days
-            ExpirationInDays: 7
-            Status: 'Enabled'
 
 # DynamoDB Storage Layer
   ClassifiedDynamoTable:
