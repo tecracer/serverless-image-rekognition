@@ -428,6 +428,63 @@ Resources:
             Path: /dogs
             Method: get
             RestApiId: !Ref DeliveryApi
+  GetSquirrelsRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM Role for GetSquirrels Backend Lambda Function
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      RoleName: 
+        Fn::Join:
+          -
+            "-"
+          - 
+            - "GetSquirrelsFunction"
+            - !Ref AWS::Region
+            - "Role"
+  GetSquirrelsRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: IAM Policy for GetSquirrels Backend Lambda Function
+      ManagedPolicyName: GetSquirrelsFunction-Policy
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "DynamoDB:Query"
+            Resource:
+              - !GetAtt ClassifiedDynamoTable.Arn
+      Roles:
+        - !Ref GetSquirrelsRole
+  GetSquirrelsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: get_squirrels/
+      Handler: app.lambda_handler
+      Role: !GetAtt GetSquirrelsRole.Arn
+      Environment:
+        Variables:
+          DynamoTable: !Ref ClassifiedDynamoTable
+      Events:
+        DeliverBase:
+          Type: Api
+          Properties:
+            Path: /squirrels
+            Method: get
+            RestApiId: !Ref DeliveryApi
 
 Outputs:
   RekognitionFunction:

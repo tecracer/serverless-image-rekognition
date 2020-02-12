@@ -13,13 +13,13 @@ def lambda_handler(event, context):
         logger.error('No Enviroment Setup!')
         exit()
 
-    dogs = query_table(dynamoTable)
+    squirrels = query_table(dynamoTable)
 
     return {
         "statusCode": 200,
         "body": json.dumps({
-            "message": "Get Dogs Function",
-            "dogs": dogs
+            "message": "Get Squirrels Function",
+            "squirrels": squirrels
         }),
         "headers": {
             'Access-Control-Allow-Origin': 'https://awsusergroup.wien',
@@ -30,7 +30,7 @@ def lambda_handler(event, context):
 
 
 def query_table(tableName):
-    dogss = []
+    squirrels = []
 
     dynamoClient = boto3.client('dynamodb')
     response = dynamoClient.query(
@@ -42,14 +42,14 @@ def query_table(tableName):
         KeyConditionExpression='category = :partval',
         ExpressionAttributeValues={
             ':partval': {
-                'S': 'dog'
+                'S': 'squirrel'
             }
         }
     )
 
     for item in response['Items']:
-        dogss.append({
+        squirrels.append({
             'objectkey': item['objectkey']['S']
         })
 
-    return dogss
+    return squirrels
