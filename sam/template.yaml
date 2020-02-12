@@ -371,6 +371,63 @@ Resources:
             Path: /upload
             Method: post
             RestApiId: !Ref DeliveryApi
+  GetDogsRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: IAM Role for GetDogs Backend Lambda Function
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      RoleName: 
+        Fn::Join:
+          -
+            "-"
+          - 
+            - "GetDogsFunction"
+            - !Ref AWS::Region
+            - "Role"
+  GetDogsRolePolicy:
+    Type: "AWS::IAM::ManagedPolicy"
+    Properties:
+      Description: IAM Policy for GetDogs Backend Lambda Function
+      ManagedPolicyName: GetDogsFunction-Policy
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Action: 
+              - "DynamoDB:Query"
+            Resource:
+              - !GetAtt ClassifiedDynamoTable.Arn
+      Roles:
+        - !Ref GetDogsRole
+  GetDogsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: get_dogs/
+      Handler: app.lambda_handler
+      Role: !GetAtt GetDogsRole.Arn
+      Environment:
+        Variables:
+          DynamoTable: !Ref ClassifiedDynamoTable
+      Events:
+        DeliverBase:
+          Type: Api
+          Properties:
+            Path: /dogs
+            Method: get
+            RestApiId: !Ref DeliveryApi
 
 Outputs:
   RekognitionFunction:
