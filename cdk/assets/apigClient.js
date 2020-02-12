@@ -155,6 +155,42 @@ apigClientFactory.newClient = function (config) {
     };
     
     
+    apigClient.dogsGet = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
+        
+        var dogsGetRequest = {
+            verb: 'get'.toUpperCase(),
+            path: pathComponent + uritemplate('/dogs').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(dogsGetRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
+    apigClient.dogsOptions = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
+        
+        var dogsOptionsRequest = {
+            verb: 'options'.toUpperCase(),
+            path: pathComponent + uritemplate('/dogs').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(dogsOptionsRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
     apigClient.uploadPost = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         
