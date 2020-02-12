@@ -81,6 +81,9 @@
           <th>
             Availability Status
           </th>
+          <th>
+            Refresh
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -91,6 +94,9 @@
           <td>
             <i class="fas fa-times-circle trc-color-red" id="trc-cats-status"></i>
           </td>
+          <td>
+            <i class="fas fa-sync-alt" onclick="refreshCatsApi()"></i>
+          </td>
         </tr>
         <tr>
           <td>
@@ -98,6 +104,9 @@
           </td>
           <td>
             <i class="fas fa-times-circle trc-color-red" id="trc-dogs-status"></i>
+          </td>
+          <td>
+            <i class="fas fa-sync-alt" onclick="refreshDogsApi()"></i>
           </td>
         </tr>
       </tbody>
