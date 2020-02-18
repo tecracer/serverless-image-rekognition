@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  GetHtmlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://sam-demo-bucket/todo_list.zip
+      Handler: index.gethtml
+      Runtime: nodejs10.x
+      Policies: AmazonDynamoDBReadOnlyAccess
+      Events:
+        GetHtml:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+  
+  ListTable:
+    Type: AWS::Serverless::SimpleTable
