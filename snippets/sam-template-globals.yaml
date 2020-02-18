@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+# CloudFormationParameters
+  ENVIRONMENT:
+    Description: Value for the SAM Application Environment
+    Type: String
+    AllowedValues:
+      - prod
+      - dev
+    Default: dev
+
+Globals:
+  Function:
+    Runtime: nodejs10.x
+    CodeUri: s3://special-code-repo/zoo_app.zip
+    MemorySize: 1024
+    Timeout: 30
+    AutoPublishAlias: !Ref ENVIRONMENT
+
+Resources:
+  getZebrasFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: getzebras.handler
+      Events:
+        GetZebras:
+          Type: Api
+          Properties:
+            Path: /zebras
+            Method: ANY
+
+  getLionsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: getlions.handler
+      MemorySize: 512
+      Timeout: 40
+      Events:
+        GetLions:
+          Type: Api
+          Properties:
+            Path: /lions
+            Method: ANY
+
+
+
+
+
+    
